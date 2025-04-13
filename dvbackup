@@ -170,6 +170,16 @@ validate_volume_name() {
   fi
 }
 
+# Function to check if a container is using the volume
+is_volume_in_use() {
+  docker ps --format '{{.Names}}' | while read -r container; do
+    if docker inspect --format '{{range .Mounts}}{{if eq .Type "volume"}}{{.Name}}{{end}}{{end}}' "$container" | grep -q "$1"; then
+      return 0
+    fi
+  done
+  return 1
+}
+
 # Resolve absolute path safely for macOS, Linux, and Git Bash
 if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
   # Git Bash on Windows
@@ -193,8 +203,17 @@ if [[ "$MODE" == "backup" ]]; then
     ARCHIVE="${ABS_BACKUP_DIR}/${VOLUME}.tar.gz"
     echo -e "${BACKUP} Backing up volume: ${BLUE}$VOLUME${NC} → ${GREEN}$ARCHIVE${NC}"
     
+    # Check if volume is in use
+    if is_volume_in_use "$VOLUME"; then
+      echo -e "${WARNING} Volume $VOLUME is in use by running containers"
+      echo -e "${INFO} Using read-only mount for safety"
+      MOUNT_OPTION=":ro"
+    else
+      MOUNT_OPTION=""
+    fi
+    
     docker run --rm \
-      -v "${VOLUME}:/source" \
+      -v "${VOLUME}:/source${MOUNT_OPTION}" \
       -v "$ABS_BACKUP_DIR:/backup" \
       "$BUSYBOX_IMAGE" \
       tar czf "/backup/${VOLUME}.tar.gz" -C /source .
