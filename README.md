@@ -22,11 +22,22 @@ A simple and reliable utility for backing up and restoring Docker volumes across
 1. Download the script:
 ```bash
 curl -O https://raw.githubusercontent.com/vksh/docker-volume-backup/main/dvbackup
+chmod +x dvbackup
 ```
 
-2. Make it executable:
+2. Install it system-wide:
 ```bash
-chmod +x dvbackup
+./dvbackup install
+```
+
+This will:
+- Install the script to `/usr/local/bin`
+- Make it executable
+- Make it available system-wide
+
+Now you can run the script from anywhere using:
+```bash
+dvbackup
 ```
 
 ## Usage

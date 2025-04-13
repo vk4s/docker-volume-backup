@@ -14,6 +14,7 @@ WARNING="⚠️"
 ERROR="❌"
 BACKUP="📦"
 RESTORE="🔄"
+INSTALL="🔧"
 
 MODE="$1"
 TARGET_DIR="$2"
@@ -21,6 +22,7 @@ shift 2
 VOLUMES=("$@")
 
 BUSYBOX_IMAGE="busybox"
+INSTALL_DIR="/usr/local/bin"
 
 print_usage() {
   echo -e "${BLUE}Docker Volume Backup and Restore Utility by @vksh (https://vksh.fyi)${NC}"
@@ -28,14 +30,49 @@ print_usage() {
   echo -e "${INFO} Usage:"
   echo -e "  $0 backup <backup-dir> <volume1> [volume2 ...]"
   echo -e "  $0 restore <backup-dir> <new_name=backup_name> [more...]"
+  echo -e "  $0 install (installs to /usr/local/bin)"
   echo
   echo -e "${INFO} Examples:"
   echo -e "  $0 backup ./backups solr_data postgres_data"
   echo -e "  $0 restore ./backups solr_data postgres_data"
   echo -e "  $0 restore ./backups my_pg=postgres_data my_solr=solr_data"
+  echo -e "  $0 install"
   echo
   exit 1
 }
+
+# Function to install the script
+install_script() {
+  echo -e "${INSTALL} Installing dvbackup to ${BLUE}${INSTALL_DIR}${NC}"
+  
+  # Check if script is already installed
+  if [[ -f "${INSTALL_DIR}/dvbackup" ]]; then
+    echo -e "${WARNING} dvbackup is already installed at ${INSTALL_DIR}/dvbackup"
+    read -p "Do you want to overwrite it? (y/N) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+      echo -e "${INFO} Installation cancelled"
+      exit 0
+    fi
+  fi
+
+  # Get the absolute path of the current script
+  SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+  
+  # Copy the script to the install directory
+  if sudo cp "$SCRIPT_PATH" "${INSTALL_DIR}/dvbackup" && sudo chmod +x "${INSTALL_DIR}/dvbackup"; then
+    echo -e "${SUCCESS} dvbackup has been installed successfully!"
+    echo -e "${INFO} You can now use it from anywhere by typing: ${GREEN}dvbackup${NC}"
+  else
+    echo -e "${ERROR} Failed to install dvbackup"
+    exit 1
+  fi
+}
+
+if [[ "$MODE" == "install" ]]; then
+  install_script
+  exit 0
+fi
 
 if [[ -z "$MODE" || -z "$TARGET_DIR" || "${#VOLUMES[@]}" -eq 0 ]]; then
   print_usage
