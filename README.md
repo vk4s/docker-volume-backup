@@ -21,12 +21,12 @@ A simple and reliable utility for backing up and restoring Docker volumes across
 
 1. Download the script:
 ```bash
-curl -O https://raw.githubusercontent.com/yourusername/docker-volume-backup/main/dcrvolbkp.sh
+curl -O https://raw.githubusercontent.com/vksh/docker-volume-backup/main/dvbackup
 ```
 
 2. Make it executable:
 ```bash
-chmod +x dcrvolbkp.sh
+chmod +x dvbackup
 ```
 
 ## Usage
@@ -34,12 +34,12 @@ chmod +x dcrvolbkp.sh
 ### Backup Volumes
 
 ```bash
-./dcrvolbkp.sh backup <backup-dir> <volume1> [volume2 ...]
+./dvbackup backup <backup-dir> <volume1> [volume2 ...]
 ```
 
 Example:
 ```bash
-./dcrvolbkp.sh backup ./backups postgres_data solr_data
+./dvbackup backup ./backups postgres_data solr_data
 ```
 
 ### Restore Volumes
@@ -48,21 +48,21 @@ You can restore volumes in two ways:
 
 1. Restore with the same name:
 ```bash
-./dcrvolbkp.sh restore <backup-dir> <volume1> [volume2 ...]
+./dvbackup restore <backup-dir> <volume1> [volume2 ...]
 ```
 
 2. Restore with new names:
 ```bash
-./dcrvolbkp.sh restore <backup-dir> <new_name=backup_name> [more...]
+./dvbackup restore <backup-dir> <new_name=backup_name> [more...]
 ```
 
 Examples:
 ```bash
 # Restore with same names
-./dcrvolbkp.sh restore ./backups postgres_data solr_data
+./dvbackup restore ./backups postgres_data solr_data
 
 # Restore with new names
-./dcrvolbkp.sh restore ./backups new_pg=postgres_data new_solr=solr_data
+./dvbackup restore ./backups new_pg=postgres_data new_solr=solr_data
 ```
 
 ## Important Notes
@@ -87,12 +87,12 @@ The script provides clear error messages for common issues:
 
 ### Backup multiple volumes
 ```bash
-./dcrvolbkp.sh backup /mnt/backups mysql_data redis_data
+./dvbackup backup /mnt/backups mysql_data redis_data
 ```
 
 ### Restore with renaming
 ```bash
-./dcrvolbkp.sh restore /mnt/backups staging_mysql=mysql_data staging_redis=redis_data
+./dvbackup restore /mnt/backups staging_mysql=mysql_data staging_redis=redis_data
 ```
 
 ## License
