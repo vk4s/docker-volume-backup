@@ -21,7 +21,7 @@ A simple and reliable utility for backing up and restoring Docker volumes across
 
 1. Download the script:
 ```bash
-curl -O https://raw.githubusercontent.com/vksh/docker-volume-backup/main/dvbackup
+curl -O https://raw.githubusercontent.com/vk4s/docker-volume-backup/main/dvbackup
 chmod +x dvbackup
 ```
 
