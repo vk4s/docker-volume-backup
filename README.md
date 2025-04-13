@@ -28,21 +28,21 @@ curl -O https://raw.githubusercontent.com/vk4s/docker-volume-backup/main/dvbacku
 chmod +x dvbackup
 ```
 
-2. Install it system-wide (requires sudo):
+2. Run the install command:
 ```bash
 ./dvbackup install
 ```
 
-This will:
-- Install the script to `/usr/local/bin`
-- Make it executable
-- Make it available system-wide
-
-Make sure `/usr/local/bin` is in your system PATH.
+The script will:
+- Ask if you want to install system-wide (requires sudo) or for the current user only
+- Install to `/usr/local/bin` for system-wide installation
+- Install to `~/.local/bin` for user-only installation
+- Make the script executable
+- Add the installation directory to your PATH if needed
 
 ### Option 2: Manual Installation
 
-If you prefer to install manually or don't have sudo access, you can:
+If you prefer to install manually, you can:
 
 1. Download the script:
 ```bash

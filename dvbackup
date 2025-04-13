@@ -30,7 +30,13 @@ print_usage() {
   echo -e "${INFO} Usage:"
   echo -e "  $0 backup <backup-dir> <volume1> [volume2 ...]"
   echo -e "  $0 restore <backup-dir> <new_name=backup_name> [more...]"
-  echo -e "  $0 install (installs to /usr/local/bin)"
+  echo -e "  $0 install"
+  echo
+  echo -e "${INFO} Installation Options:"
+  echo -e "  install - Interactive installation that will:"
+  echo -e "    - Ask for installation type (system-wide or user-only)"
+  echo -e "    - System-wide: Install to /usr/local/bin (requires sudo)"
+  echo -e "    - User-only: Install to ~/.local/bin and update PATH"
   echo
   echo -e "${INFO} Examples:"
   echo -e "  $0 backup ./backups solr_data postgres_data"
@@ -43,30 +49,89 @@ print_usage() {
 
 # Function to install the script
 install_script() {
-  echo -e "${INSTALL} Installing dvbackup to ${BLUE}${INSTALL_DIR}${NC}"
+  echo -e "${INSTALL} Installation Options:"
+  echo -e "1. System-wide installation (requires sudo)"
+  echo -e "2. User-only installation"
   
-  # Check if script is already installed
-  if [[ -f "${INSTALL_DIR}/dvbackup" ]]; then
-    echo -e "${WARNING} dvbackup is already installed at ${INSTALL_DIR}/dvbackup"
-    read -p "Do you want to overwrite it? (y/N) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-      echo -e "${INFO} Installation cancelled"
-      exit 0
-    fi
-  fi
+  read -p "Choose installation type (1/2): " install_type
+  
+  case $install_type in
+    1)
+      INSTALL_DIR="/usr/local/bin"
+      echo -e "${INSTALL} Installing dvbackup to ${BLUE}${INSTALL_DIR}${NC} (requires sudo)"
+      
+      # Check if script is already installed
+      if [[ -f "${INSTALL_DIR}/dvbackup" ]]; then
+        echo -e "${WARNING} dvbackup is already installed at ${INSTALL_DIR}/dvbackup"
+        read -p "Do you want to overwrite it? (y/N) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+          echo -e "${INFO} Installation cancelled"
+          exit 0
+        fi
+      fi
 
-  # Get the absolute path of the current script
-  SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
-  
-  # Copy the script to the install directory
-  if sudo cp "$SCRIPT_PATH" "${INSTALL_DIR}/dvbackup" && sudo chmod +x "${INSTALL_DIR}/dvbackup"; then
-    echo -e "${SUCCESS} dvbackup has been installed successfully!"
-    echo -e "${INFO} You can now use it from anywhere by typing: ${GREEN}dvbackup${NC}"
-  else
-    echo -e "${ERROR} Failed to install dvbackup"
-    exit 1
-  fi
+      # Get the absolute path of the current script
+      SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+      
+      # Copy the script to the install directory
+      if sudo cp "$SCRIPT_PATH" "${INSTALL_DIR}/dvbackup" && sudo chmod +x "${INSTALL_DIR}/dvbackup"; then
+        echo -e "${SUCCESS} dvbackup has been installed successfully!"
+        echo -e "${INFO} You can now use it from anywhere by typing: ${GREEN}dvbackup${NC}"
+      else
+        echo -e "${ERROR} Failed to install dvbackup"
+        exit 1
+      fi
+      ;;
+      
+    2)
+      INSTALL_DIR="$HOME/.local/bin"
+      echo -e "${INSTALL} Installing dvbackup to ${BLUE}${INSTALL_DIR}${NC}"
+      
+      # Create directory if it doesn't exist
+      mkdir -p "$INSTALL_DIR"
+      
+      # Check if script is already installed
+      if [[ -f "${INSTALL_DIR}/dvbackup" ]]; then
+        echo -e "${WARNING} dvbackup is already installed at ${INSTALL_DIR}/dvbackup"
+        read -p "Do you want to overwrite it? (y/N) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+          echo -e "${INFO} Installation cancelled"
+          exit 0
+        fi
+      fi
+
+      # Get the absolute path of the current script
+      SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+      
+      # Copy the script to the install directory
+      if cp "$SCRIPT_PATH" "${INSTALL_DIR}/dvbackup" && chmod +x "${INSTALL_DIR}/dvbackup"; then
+        # Add to PATH if not already there
+        if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
+          echo -e "${INFO} Adding ${INSTALL_DIR} to your PATH"
+          if [[ -f "$HOME/.bashrc" ]]; then
+            echo "export PATH=\"$INSTALL_DIR:\$PATH\"" >> "$HOME/.bashrc"
+            echo -e "${INFO} Added to ~/.bashrc. Run 'source ~/.bashrc' to update your current shell"
+          elif [[ -f "$HOME/.zshrc" ]]; then
+            echo "export PATH=\"$INSTALL_DIR:\$PATH\"" >> "$HOME/.zshrc"
+            echo -e "${INFO} Added to ~/.zshrc. Run 'source ~/.zshrc' to update your current shell"
+          fi
+        fi
+        
+        echo -e "${SUCCESS} dvbackup has been installed successfully!"
+        echo -e "${INFO} You can now use it from anywhere by typing: ${GREEN}dvbackup${NC}"
+      else
+        echo -e "${ERROR} Failed to install dvbackup"
+        exit 1
+      fi
+      ;;
+      
+    *)
+      echo -e "${ERROR} Invalid option. Please choose 1 or 2."
+      exit 1
+      ;;
+  esac
 }
 
 if [[ "$MODE" == "install" ]]; then
