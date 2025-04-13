@@ -172,11 +172,19 @@ validate_volume_name() {
 
 # Function to check if a container is using the volume
 is_volume_in_use() {
-  docker ps --format '{{.Names}}' | while read -r container; do
-    if docker inspect --format '{{range .Mounts}}{{if eq .Type "volume"}}{{.Name}}{{end}}{{end}}' "$container" | grep -q "$1"; then
-      return 0
+  local volume_name="$1"
+  local containers=()
+  
+  while IFS= read -r container; do
+    if docker inspect --format '{{range .Mounts}}{{if eq .Type "volume"}}{{.Name}}{{end}}{{end}}' "$container" | grep -q "$volume_name"; then
+      containers+=("$container")
     fi
-  done
+  done < <(docker ps --format '{{.Names}}')
+  
+  if [[ ${#containers[@]} -gt 0 ]]; then
+    echo "${containers[@]}"
+    return 0
+  fi
   return 1
 }
 
@@ -204,10 +212,19 @@ if [[ "$MODE" == "backup" ]]; then
     echo -e "${BACKUP} Backing up volume: ${BLUE}$VOLUME${NC} → ${GREEN}$ARCHIVE${NC}"
     
     # Check if volume is in use
-    if is_volume_in_use "$VOLUME"; then
-      echo -e "${WARNING} Volume $VOLUME is in use by running containers"
-      echo -e "${INFO} Using read-only mount for safety"
-      MOUNT_OPTION=":ro"
+    containers=$(is_volume_in_use "$VOLUME")
+    if [[ $? -eq 0 ]]; then
+      echo -e "${WARNING} Volume is in use by containers:"
+      for container in $containers; do
+        echo -e "  - ${YELLOW}$container${NC}"
+      done
+      if [[ "$FORCE" != "true" ]]; then
+        echo -e "${INFO} Using read-only mount for safety"
+        MOUNT_OPTION=":ro"
+      else
+        echo -e "${WARNING} Force mode enabled - using regular mount"
+        MOUNT_OPTION=""
+      fi
     else
       MOUNT_OPTION=""
     fi
