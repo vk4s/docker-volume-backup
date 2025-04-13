@@ -137,6 +137,96 @@ dvbackup backup /mnt/backups mysql_data redis_data
 dvbackup restore /mnt/backups staging_mysql=mysql_data staging_redis=redis_data
 ```
 
+## Docker Volume Cheatsheet
+
+### Basic Volume Operations
+
+```bash
+# Create a new volume
+docker volume create my_volume
+
+# List all volumes
+docker volume ls
+
+# Inspect a volume
+docker volume inspect my_volume
+
+# Remove a volume
+docker volume rm my_volume
+
+# Remove all unused volumes
+docker volume prune
+```
+
+### Using Volumes with Containers
+
+```bash
+# Mount a volume to a container
+docker run -v my_volume:/data my_image
+
+# Mount a volume with read-only access
+docker run -v my_volume:/data:ro my_image
+
+# Mount a specific directory as a volume
+docker run -v /host/path:/container/path my_image
+
+# Use a named volume with docker-compose
+# volumes:
+#   my_volume:
+#     name: my_volume
+```
+
+### Volume Backup and Restore
+
+```bash
+# Manual backup (alternative to dvbackup)
+docker run --rm -v my_volume:/source -v $(pwd):/backup busybox tar czf /backup/backup.tar.gz -C /source .
+
+# Manual restore (alternative to dvbackup)
+docker volume create new_volume
+docker run --rm -v new_volume:/restore -v $(pwd):/backup busybox tar xzf /backup/backup.tar.gz -C /restore
+
+# Copy files to/from a volume
+docker cp container_id:/path/in/container /host/path
+docker cp /host/path container_id:/path/in/container
+```
+
+### Volume Management
+
+```bash
+# Check volume disk usage
+docker system df -v
+
+# Backup all volumes in a project
+docker-compose down
+dvbackup backup ./backups $(docker volume ls -q --filter name=project_name)
+
+# Migrate volumes between hosts
+dvbackup backup ./backups volume_name
+# Transfer backup file to new host
+dvbackup restore ./backups volume_name
+```
+
+### Common Volume Patterns
+
+```bash
+# Database volumes
+docker volume create postgres_data
+docker run -v postgres_data:/var/lib/postgresql/data postgres
+
+# Application data
+docker volume create app_data
+docker run -v app_data:/app/data my_app
+
+# Configuration volumes
+docker volume create app_config
+docker run -v app_config:/app/config my_app
+
+# Cache volumes
+docker volume create app_cache
+docker run -v app_cache:/app/cache my_app
+```
+
 ## License
 
 MIT License
